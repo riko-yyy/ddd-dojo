@@ -24,7 +24,7 @@ public class BorrowBookUseCaseTests
     {
         var memberId = new MemberId("M-001");
         var bookId = new BookId("B-001");
-        _memberRepository.Save(new Member(memberId, "田中"));
+        _memberRepository.Save(Member.Create(memberId, "田中"));
         _bookRepository.Save(new Book(bookId, "本1", "著者1", new Isbn("4798157012")));
 
         var loanRecordId = _useCase.Handle(memberId, bookId, new DateOnly(2026, 8, 20));
@@ -48,7 +48,7 @@ public class BorrowBookUseCaseTests
     public void 存在しない本だと例外になる()
     {
         var memberId = new MemberId("M-001");
-        _memberRepository.Save(new Member(memberId, "田中"));
+        _memberRepository.Save(Member.Create(memberId, "田中"));
 
         Assert.Throws<BookNotFoundException>(
             () => _useCase.Handle(memberId, new BookId("B-999"), new DateOnly(2026, 8, 20)));
@@ -60,7 +60,7 @@ public class BorrowBookUseCaseTests
         var memberId = new MemberId("M-001");
         var bookId1 = new BookId("B-001");
         var bookId2 = new BookId("B-002");
-        var member = new Member(memberId, "田中");
+        var member = Member.Create(memberId, "田中");
         member.Borrow(LoanRecordId.NewId(), bookId1, new DateOnly(2026, 8, 1));
         _memberRepository.Save(member);
         _bookRepository.Save(new Book(bookId1, "本1", "著者1", new Isbn("4798157012")));

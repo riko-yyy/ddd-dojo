@@ -12,12 +12,6 @@ public sealed class Member : Entity<MemberId>, IAggregateRoot
     public string Name { get; }
     public IReadOnlyList<LoanRecord> LoanRecords => _loanRecords;
 
-    /// <summary>新規に会員を作成する。貸出記録は0件から始まる。</summary>
-    public Member(MemberId id, string name)
-        : this(id, name, [])
-    {
-    }
-
     private Member(MemberId id, string name, List<LoanRecord> loanRecords)
         : base(id)
     {
@@ -28,6 +22,12 @@ public sealed class Member : Entity<MemberId>, IAggregateRoot
 
         Name = name;
         _loanRecords = loanRecords;
+    }
+
+    /// <summary>新規に会員を作成する。貸出記録は0件から始まる。</summary>
+    public static Member Create(MemberId id, string name)
+    {
+        return new Member(id, name, []);
     }
 
     /// <summary>

@@ -21,7 +21,7 @@ public class ReturnBookUseCaseTests
     public void 借りている本を返却するとステータスが返却済になる()
     {
         var memberId = new MemberId("M-001");
-        var member = new Member(memberId, "田中");
+        var member = Member.Create(memberId, "田中");
         var loanRecord = member.Borrow(LoanRecordId.NewId(), new BookId("B-001"), new DateOnly(2026, 8, 20));
         _memberRepository.Save(member);
 
@@ -42,7 +42,7 @@ public class ReturnBookUseCaseTests
     public void 存在しない貸出記録だと例外になる()
     {
         var memberId = new MemberId("M-001");
-        _memberRepository.Save(new Member(memberId, "田中"));
+        _memberRepository.Save(Member.Create(memberId, "田中"));
 
         Assert.Throws<LoanRecordNotFoundException>(
             () => _useCase.Handle(memberId, LoanRecordId.NewId()));

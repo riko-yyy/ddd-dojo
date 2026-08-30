@@ -6,14 +6,14 @@ namespace LibraryLoan.Tests.Domain.Members;
 
 public class MemberTests
 {
-    private static Member 会員を作る() => new(new MemberId("M-001"), "田中");
+    private static Member 会員を作る() => Member.Create(new MemberId("M-001"), "田中");
 
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
     public void 氏名が空または空白だと例外になる(string name)
     {
-        Assert.Throws<ArgumentException>(() => new Member(new MemberId("M-001"), name));
+        Assert.Throws<ArgumentException>(() => Member.Create(new MemberId("M-001"), name));
     }
 
     [Fact]
@@ -28,8 +28,8 @@ public class MemberTests
     public void 同じIdの会員は同一とみなされる()
     {
         var id = new MemberId("M-001");
-        var member1 = new Member(id, "田中");
-        var member2 = new Member(id, "別名義");
+        var member1 = Member.Create(id, "田中");
+        var member2 = Member.Create(id, "別名義");
 
         Assert.Equal(member1, member2);
     }
@@ -37,8 +37,8 @@ public class MemberTests
     [Fact]
     public void 異なるIdの会員は同一とみなされない()
     {
-        var member1 = new Member(new MemberId("M-001"), "田中");
-        var member2 = new Member(new MemberId("M-002"), "田中");
+        var member1 = Member.Create(new MemberId("M-001"), "田中");
+        var member2 = Member.Create(new MemberId("M-002"), "田中");
 
         Assert.NotEqual(member1, member2);
     }
