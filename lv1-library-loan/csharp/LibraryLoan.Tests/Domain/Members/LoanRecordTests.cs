@@ -62,4 +62,23 @@ public class LoanRecordTests
 
         Assert.False(loanRecord.IsOverdue(new DateOnly(2026, 8, 16)));
     }
+
+    [Fact]
+    public void 同じIdの貸出記録は状態が違っても同一とみなされる()
+    {
+        var id = LoanRecordId.NewId();
+        var loanRecord1 = LoanRecord.Loan(id, SampleBookId, new DateOnly(2026, 8, 1));
+        var loanRecord2 = LoanRecord.Loan(id, new BookId("B-999"), new DateOnly(2026, 8, 20));
+
+        Assert.Equal(loanRecord1, loanRecord2);
+    }
+
+    [Fact]
+    public void 異なるIdの貸出記録は同一とみなされない()
+    {
+        var loanRecord1 = LoanRecord.Loan(LoanRecordId.NewId(), SampleBookId, new DateOnly(2026, 8, 1));
+        var loanRecord2 = LoanRecord.Loan(LoanRecordId.NewId(), SampleBookId, new DateOnly(2026, 8, 1));
+
+        Assert.NotEqual(loanRecord1, loanRecord2);
+    }
 }

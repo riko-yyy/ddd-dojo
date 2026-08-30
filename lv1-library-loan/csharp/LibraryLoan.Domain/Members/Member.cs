@@ -7,12 +7,18 @@ namespace LibraryLoan.Domain.Members;
 /// <summary>会員集約のルート。</summary>
 public sealed class Member : Entity<MemberId>, IAggregateRoot
 {
-    private readonly List<LoanRecord> _loanRecords = new();
+    private readonly List<LoanRecord> _loanRecords;
 
     public string Name { get; }
     public IReadOnlyList<LoanRecord> LoanRecords => _loanRecords;
 
+    /// <summary>新規に会員を作成する。貸出記録は0件から始まる。</summary>
     public Member(MemberId id, string name)
+        : this(id, name, [])
+    {
+    }
+
+    private Member(MemberId id, string name, List<LoanRecord> loanRecords)
         : base(id)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -21,6 +27,15 @@ public sealed class Member : Entity<MemberId>, IAggregateRoot
         }
 
         Name = name;
+        _loanRecords = loanRecords;
+    }
+
+    /// <summary>
+    /// 永続化層から会員を再構築する。既存の貸出記録を保持した状態で復元するために使う。
+    /// </summary>
+    public static Member Reconstruct(MemberId id, string name, IEnumerable<LoanRecord> loanRecords)
+    {
+        return new Member(id, name, loanRecords.ToList());
     }
 
     /// <summary>
