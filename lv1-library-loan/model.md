@@ -15,19 +15,21 @@
 
 ```mermaid
 classDiagram
-    class 会員 {
-        <<AggregateRoot>>
-        +会員ID
-        +氏名
-        +貸出記録リスト
-    }
-    class 貸出記録 {
-        <<Entity>>
-        +貸出記録ID
-        +貸出日
-        +返却期限
-        +貸出本ID
-        +貸出ステータス
+    namespace 会員集約 {
+        class 会員 {
+            <<AggregateRoot>>
+            +会員ID
+            +氏名
+            +貸出記録リスト
+        }
+        class 貸出記録 {
+            <<Entity>>
+            +貸出記録ID
+            +貸出日
+            +返却期限
+            +貸出本ID
+            +貸出ステータス
+        }
     }
     class 本 {
         <<Entity>>
