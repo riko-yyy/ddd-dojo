@@ -1,25 +1,25 @@
+using LibraryLoan.BuildingBlocks;
 using LibraryLoan.Domain.Books;
 using LibraryLoan.Domain.Exceptions;
 
 namespace LibraryLoan.Domain.Members;
 
 /// <summary>会員集約のルート。</summary>
-public sealed class Member
+public sealed class Member : Entity<MemberId>, IAggregateRoot
 {
     private readonly List<LoanRecord> _loanRecords = new();
 
-    public MemberId Id { get; }
     public string Name { get; }
     public IReadOnlyList<LoanRecord> LoanRecords => _loanRecords;
 
     public Member(MemberId id, string name)
+        : base(id)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
             throw new ArgumentException("氏名は空にできません。", nameof(name));
         }
 
-        Id = id;
         Name = name;
     }
 

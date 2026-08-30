@@ -1,13 +1,15 @@
+using LibraryLoan.BuildingBlocks;
+
 namespace LibraryLoan.Domain.Books;
 
-public sealed class Book
+public sealed class Book : Entity<BookId>, IAggregateRoot
 {
-    public BookId Id { get; }
     public string Title { get; }
     public string Author { get; }
     public Isbn Isbn { get; }
 
     public Book(BookId id, string title, string author, Isbn isbn)
+        : base(id)
     {
         if (string.IsNullOrWhiteSpace(title))
         {
@@ -19,7 +21,6 @@ public sealed class Book
             throw new ArgumentException("著者は空にできません。", nameof(author));
         }
 
-        Id = id;
         Title = title;
         Author = author;
         Isbn = isbn;
