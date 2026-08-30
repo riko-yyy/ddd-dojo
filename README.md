@@ -25,11 +25,13 @@ ddd-dojo/
   lv1-library-loan/
     docs.md          # 要求文・ユビキタス言語
     model.md          # SUDOモデリング(S/U/D/O)
+    decisions.md      # 検討・決定ログ(モデリング〜実装)
     csharp/
     typescript/
   lv2-xxx/
     docs.md
     model.md
+    decisions.md
     csharp/
     typescript/
 ```
@@ -47,6 +49,19 @@ ddd-dojo/
 - **O: オブジェクト図** — ドメインモデルの具体例を、インスタンスと吹き出し(ルール/制約)で示す
 
 作成順序は決め打ちしない。お題ごとにやりやすい順で進めてよい。
+
+## 検討ログの記法
+
+モデリングでも実装でも、選択肢で迷って決めた事項は各お題ディレクトリの `decisions.md` に時系列で残す。
+
+```
+## YYYY-MM-DD: 見出し
+
+- 論点:
+- 検討した選択肢:
+- 決定:
+- 理由:
+```
 
 ## お題一覧
 
