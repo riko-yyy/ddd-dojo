@@ -1,0 +1,28 @@
+# ==== .NET / C# ====
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.dll
+*.pdb
+
+# ==== Node / TypeScript ====
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ==== Editor / OS ====
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ==== Env ====
+.env
+.env.local
