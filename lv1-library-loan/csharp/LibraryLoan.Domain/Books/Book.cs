@@ -2,7 +2,7 @@ using LibraryLoan.BuildingBlocks;
 
 namespace LibraryLoan.Domain.Books;
 
-public sealed class Book : Entity<BookId>, IAggregateRoot
+public sealed class Book : Entity<BookId>
 {
     public string Title { get; }
     public string Author { get; }
