@@ -1,6 +1,6 @@
 using LibraryLoan.BuildingBlocks;
 using LibraryLoan.Domain.Books;
-using LibraryLoan.Domain.Exceptions;
+using LibraryLoan.Results;
 
 namespace LibraryLoan.Domain.Members;
 
@@ -41,11 +41,11 @@ public sealed class Member : Entity<MemberId>, IAggregateRoot
     /// <summary>
     /// 本を借りる。延滞中の貸出記録が1件でもある場合は借りられない。
     /// </summary>
-    public LoanRecord Borrow(LoanRecordId loanRecordId, BookId bookId, DateOnly loanDate)
+    public Result<LoanRecord> Borrow(LoanRecordId loanRecordId, BookId bookId, DateOnly loanDate)
     {
         if (_loanRecords.Any(r => r.IsOverdue(loanDate)))
         {
-            throw new MemberHasOverdueLoanException(Id);
+            return Result<LoanRecord>.Failure(MemberErrors.HasOverdueLoan(Id));
         }
 
         var loanRecord = LoanRecord.Loan(loanRecordId, bookId, loanDate);
@@ -54,11 +54,14 @@ public sealed class Member : Entity<MemberId>, IAggregateRoot
     }
 
     /// <summary>借りた本を返却する。</summary>
-    public void Return(LoanRecordId loanRecordId)
+    public Result Return(LoanRecordId loanRecordId)
     {
-        var loanRecord = _loanRecords.FirstOrDefault(r => r.Id == loanRecordId)
-            ?? throw new LoanRecordNotFoundException(loanRecordId);
+        var loanRecord = _loanRecords.FirstOrDefault(r => r.Id == loanRecordId);
+        if (loanRecord is null)
+        {
+            return Result.Failure(LoanRecordErrors.NotFound(loanRecordId));
+        }
 
-        loanRecord.Return();
+        return loanRecord.Return();
     }
 }

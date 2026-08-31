@@ -1,5 +1,4 @@
 using LibraryLoan.Domain.Books;
-using LibraryLoan.Domain.Exceptions;
 using LibraryLoan.Domain.Members;
 
 namespace LibraryLoan.Tests.Domain.Members;
@@ -63,8 +62,10 @@ public class MemberTests
         var loanRecord = LoanRecord.Loan(LoanRecordId.NewId(), new BookId("B-001"), new DateOnly(2026, 8, 1)); // 返却期限: 2026-08-15
         var member = Member.Reconstruct(new MemberId("M-001"), "田中", [loanRecord]);
 
-        Assert.Throws<MemberHasOverdueLoanException>(
-            () => member.Borrow(LoanRecordId.NewId(), new BookId("B-002"), new DateOnly(2026, 8, 20)));
+        var result = member.Borrow(LoanRecordId.NewId(), new BookId("B-002"), new DateOnly(2026, 8, 20));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(MemberErrors.HasOverdueLoan(member.Id), result.Error);
     }
 
     [Fact]
@@ -72,10 +73,11 @@ public class MemberTests
     {
         var member = 会員を作る();
 
-        var loanRecord = member.Borrow(LoanRecordId.NewId(), new BookId("B-001"), new DateOnly(2026, 8, 20));
+        var result = member.Borrow(LoanRecordId.NewId(), new BookId("B-001"), new DateOnly(2026, 8, 20));
 
+        Assert.True(result.IsSuccess);
         Assert.Single(member.LoanRecords);
-        Assert.Equal(LoanStatus.Borrowed, loanRecord.Status);
+        Assert.Equal(LoanStatus.Borrowed, result.Value.Status);
     }
 
     [Fact]
@@ -86,27 +88,34 @@ public class MemberTests
 
         var 基準日 = new DateOnly(2026, 8, 20); // 返却期限を過ぎている
 
-        Assert.Throws<MemberHasOverdueLoanException>(
-            () => member.Borrow(LoanRecordId.NewId(), new BookId("B-003"), 基準日));
+        var result = member.Borrow(LoanRecordId.NewId(), new BookId("B-003"), 基準日);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(MemberErrors.HasOverdueLoan(member.Id), result.Error);
     }
 
     [Fact]
     public void 延滞中の本を返却すればまた借りられる()
     {
         var member = 会員を作る();
-        var 延滞中の貸出 = member.Borrow(LoanRecordId.NewId(), new BookId("B-002"), new DateOnly(2026, 8, 1));
+        var 延滞中の貸出 = member.Borrow(LoanRecordId.NewId(), new BookId("B-002"), new DateOnly(2026, 8, 1)).Value;
         member.Return(延滞中の貸出.Id);
 
-        member.Borrow(LoanRecordId.NewId(), new BookId("B-003"), new DateOnly(2026, 8, 20));
+        var result = member.Borrow(LoanRecordId.NewId(), new BookId("B-003"), new DateOnly(2026, 8, 20));
 
+        Assert.True(result.IsSuccess);
         Assert.Equal(2, member.LoanRecords.Count);
     }
 
     [Fact]
-    public void 存在しない貸出記録を返却しようとすると例外になる()
+    public void 存在しない貸出記録を返却しようとすると失敗になる()
     {
         var member = 会員を作る();
+        var loanRecordId = LoanRecordId.NewId();
 
-        Assert.Throws<LoanRecordNotFoundException>(() => member.Return(LoanRecordId.NewId()));
+        var result = member.Return(loanRecordId);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(LoanRecordErrors.NotFound(loanRecordId), result.Error);
     }
 }

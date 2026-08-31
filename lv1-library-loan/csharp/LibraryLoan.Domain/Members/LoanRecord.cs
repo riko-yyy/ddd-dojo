@@ -1,6 +1,6 @@
 using LibraryLoan.BuildingBlocks;
 using LibraryLoan.Domain.Books;
-using LibraryLoan.Domain.Exceptions;
+using LibraryLoan.Results;
 
 namespace LibraryLoan.Domain.Members;
 
@@ -29,13 +29,14 @@ public sealed class LoanRecord : Entity<LoanRecordId>
 
     public bool IsOverdue(DateOnly asOfDate) => Status == LoanStatus.Borrowed && asOfDate > DueDate;
 
-    public void Return()
+    public Result Return()
     {
         if (Status != LoanStatus.Borrowed)
         {
-            throw new InvalidLoanStatusTransitionException(Id, Status, LoanStatus.Returned);
+            return Result.Failure(LoanRecordErrors.AlreadyReturned(Id));
         }
 
         Status = LoanStatus.Returned;
+        return Result.Success();
     }
 }

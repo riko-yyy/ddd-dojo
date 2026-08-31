@@ -1,8 +1,8 @@
 using LibraryLoan.Application.Books;
-using LibraryLoan.Application.Exceptions;
 using LibraryLoan.Application.Members;
 using LibraryLoan.Domain.Books;
 using LibraryLoan.Domain.Members;
+using LibraryLoan.Results;
 
 namespace LibraryLoan.Application.UseCases;
 
@@ -18,14 +18,26 @@ public sealed class BorrowBookUseCase
         _bookRepository = bookRepository;
     }
 
-    public LoanRecordId Handle(MemberId memberId, BookId bookId, DateOnly loanDate)
+    public Result<LoanRecordId> Handle(MemberId memberId, BookId bookId, DateOnly loanDate)
     {
-        var member = _memberRepository.Find(memberId) ?? throw new MemberNotFoundException(memberId);
-        _ = _bookRepository.Find(bookId) ?? throw new BookNotFoundException(bookId);
+        var member = _memberRepository.Find(memberId);
+        if (member is null)
+        {
+            return Result<LoanRecordId>.Failure(MemberRepositoryErrors.NotFound(memberId));
+        }
 
-        var loanRecord = member.Borrow(LoanRecordId.NewId(), bookId, loanDate);
+        if (_bookRepository.Find(bookId) is null)
+        {
+            return Result<LoanRecordId>.Failure(BookRepositoryErrors.NotFound(bookId));
+        }
+
+        var borrowResult = member.Borrow(LoanRecordId.NewId(), bookId, loanDate);
+        if (borrowResult.IsFailure)
+        {
+            return Result<LoanRecordId>.Failure(borrowResult.Error);
+        }
+
         _memberRepository.Save(member);
-
-        return loanRecord.Id;
+        return borrowResult.Value.Id;
     }
 }

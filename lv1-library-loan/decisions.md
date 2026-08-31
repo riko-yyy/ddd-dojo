@@ -31,3 +31,12 @@
   - コンストラクタをprivateにし、`Create`(新規作成)と`Reconstruct`(復元)の2つのstaticファクトリメソッドに統一する
 - 決定: コンストラクタをprivateにし、`Create`/`Reconstruct`のstaticファクトリメソッドに統一する
 - 理由: 生成経路が片方だけpublicコンストラクタ、もう片方だけstaticメソッドという非対称な形だと、呼び出し側のコードだけでは「なぜここは`new`で、あちらは`Reconstruct`なのか」が伝わらない。名前を持つstaticメソッドに統一することで、`Member.Create(...)`/`Member.Reconstruct(...)`という呼び出し自体が生成の意図(新規か復元か)を語るようになる
+
+## 2026-08-30: 業務ルール違反の伝達を例外にするかResultにするか
+
+- 論点: 不変条件違反(延滞中の会員が借りようとする、返却済の貸出記録を再度返却しようとする)やNotFound系の失敗を、例外(throw)で伝えるかResult型で伝えるか
+- 検討した選択肢:
+  - 従来通り、独自の例外クラス(`MemberHasOverdueLoanException`など)をthrowする
+  - [riko-yyy/DesignShowcase](https://github.com/riko-yyy/DesignShowcase/tree/main/src/Results)の`Result`/`Result<T>`/`Error`を取り込み、業務ルール違反はResultの失敗として返す
+- 決定: `LibraryLoan.Results`としてResult/Result&lt;T&gt;/Error/ResultExtensionsを取り込み、業務ルール違反(不変条件違反・NotFound系)をResultで表現する。値オブジェクト(MemberId/BookId/LoanRecordId/Isbn)の入力バリデーションは対象外とし、引き続き`ArgumentException`のままとする
+- 理由: 「延滞中だから借りられない」「対象が見つからない」は業務上ごく普通に起こりうる失敗であり、呼び出し側(ユースケース層)が`try-catch`ではなく`if (result.IsFailure)`という正常系のフローとして扱える方が適切と判断した。一方、値オブジェクトのコンストラクタが受け取る不正な入力(空文字・不正なISBN形式)は「そもそも不正な値を持つインスタンスを存在させない」というコンストラクタの契約の話であり、Resultで表現する対象とは性質が異なるため、今回はスコープに含めなかった

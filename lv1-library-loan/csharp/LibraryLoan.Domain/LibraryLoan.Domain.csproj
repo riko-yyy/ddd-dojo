@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LibraryLoan.BuildingBlocks\LibraryLoan.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\LibraryLoan.Results\LibraryLoan.Results.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

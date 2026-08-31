@@ -1,6 +1,6 @@
-using LibraryLoan.Application.Exceptions;
 using LibraryLoan.Application.Members;
 using LibraryLoan.Domain.Members;
+using LibraryLoan.Results;
 
 namespace LibraryLoan.Application.UseCases;
 
@@ -14,10 +14,21 @@ public sealed class ReturnBookUseCase
         _memberRepository = memberRepository;
     }
 
-    public void Handle(MemberId memberId, LoanRecordId loanRecordId)
+    public Result Handle(MemberId memberId, LoanRecordId loanRecordId)
     {
-        var member = _memberRepository.Find(memberId) ?? throw new MemberNotFoundException(memberId);
-        member.Return(loanRecordId);
+        var member = _memberRepository.Find(memberId);
+        if (member is null)
+        {
+            return Result.Failure(MemberRepositoryErrors.NotFound(memberId));
+        }
+
+        var returnResult = member.Return(loanRecordId);
+        if (returnResult.IsFailure)
+        {
+            return returnResult;
+        }
+
         _memberRepository.Save(member);
+        return Result.Success();
     }
 }

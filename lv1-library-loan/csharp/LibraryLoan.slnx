@@ -2,5 +2,6 @@
   <Project Path="LibraryLoan.Application/LibraryLoan.Application.csproj" />
   <Project Path="LibraryLoan.BuildingBlocks/LibraryLoan.BuildingBlocks.csproj" />
   <Project Path="LibraryLoan.Domain/LibraryLoan.Domain.csproj" />
+  <Project Path="LibraryLoan.Results/LibraryLoan.Results.csproj" />
   <Project Path="LibraryLoan.Tests/LibraryLoan.Tests.csproj" />
 </Solution>

@@ -1,5 +1,4 @@
 using LibraryLoan.Domain.Books;
-using LibraryLoan.Domain.Exceptions;
 using LibraryLoan.Domain.Members;
 
 namespace LibraryLoan.Tests.Domain.Members;
@@ -24,18 +23,22 @@ public class LoanRecordTests
     {
         var loanRecord = LoanRecord.Loan(LoanRecordId.NewId(), SampleBookId, new DateOnly(2026, 8, 20));
 
-        loanRecord.Return();
+        var result = loanRecord.Return();
 
+        Assert.True(result.IsSuccess);
         Assert.Equal(LoanStatus.Returned, loanRecord.Status);
     }
 
     [Fact]
-    public void 返却済の貸出記録を再度返却すると例外になる()
+    public void 返却済の貸出記録を再度返却すると失敗になる()
     {
         var loanRecord = LoanRecord.Loan(LoanRecordId.NewId(), SampleBookId, new DateOnly(2026, 8, 20));
         loanRecord.Return();
 
-        Assert.Throws<InvalidLoanStatusTransitionException>(() => loanRecord.Return());
+        var result = loanRecord.Return();
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(LoanRecordErrors.AlreadyReturned(loanRecord.Id), result.Error);
     }
 
     [Fact]
