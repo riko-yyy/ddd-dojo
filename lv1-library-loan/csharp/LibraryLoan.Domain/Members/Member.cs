@@ -1,0 +1,67 @@
+using LibraryLoan.BuildingBlocks;
+using LibraryLoan.Domain.Books;
+using LibraryLoan.Results;
+
+namespace LibraryLoan.Domain.Members;
+
+/// <summary>会員集約のルート。</summary>
+public sealed class Member : Entity<MemberId>, IAggregateRoot
+{
+    private readonly List<LoanRecord> _loanRecords;
+
+    public string Name { get; }
+    public IReadOnlyList<LoanRecord> LoanRecords => _loanRecords;
+
+    private Member(MemberId id, string name, List<LoanRecord> loanRecords)
+        : base(id)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("氏名は空にできません。", nameof(name));
+        }
+
+        Name = name;
+        _loanRecords = loanRecords;
+    }
+
+    /// <summary>新規に会員を作成する。貸出記録は0件から始まる。</summary>
+    public static Member Create(MemberId id, string name)
+    {
+        return new Member(id, name, []);
+    }
+
+    /// <summary>
+    /// 永続化層から会員を再構築する。既存の貸出記録を保持した状態で復元するために使う。
+    /// </summary>
+    public static Member Reconstruct(MemberId id, string name, IEnumerable<LoanRecord> loanRecords)
+    {
+        return new Member(id, name, loanRecords.ToList());
+    }
+
+    /// <summary>
+    /// 本を借りる。延滞中の貸出記録が1件でもある場合は借りられない。
+    /// </summary>
+    public Result<LoanRecord> Borrow(LoanRecordId loanRecordId, BookId bookId, DateOnly loanDate)
+    {
+        if (_loanRecords.Any(r => r.IsOverdue(loanDate)))
+        {
+            return Result<LoanRecord>.Failure(MemberErrors.HasOverdueLoan(Id));
+        }
+
+        var loanRecord = LoanRecord.Loan(loanRecordId, bookId, loanDate);
+        _loanRecords.Add(loanRecord);
+        return loanRecord;
+    }
+
+    /// <summary>借りた本を返却する。</summary>
+    public Result Return(LoanRecordId loanRecordId)
+    {
+        var loanRecord = _loanRecords.FirstOrDefault(r => r.Id == loanRecordId);
+        if (loanRecord is null)
+        {
+            return Result.Failure(LoanRecordErrors.NotFound(loanRecordId));
+        }
+
+        return loanRecord.Return();
+    }
+}
