@@ -60,6 +60,17 @@ public sealed class Result<T> : Result
         IsSuccess ? binder(Value) : Result<TNew>.Failure(Error);
 
     /// <summary>
+    /// 成功していれば、値を使って次の「値を持たないResult」を返す処理につなげる。
+    /// （Result&lt;T&gt;->Result。値を使うが結果自体は値を持たない検証・更新処理をつなげたい場合に使う）
+    ///
+    /// 元のDesignShowcase(riko-yyy/DesignShowcase)には「値あり→値なし」の組み合わせは
+    /// 意図的に含まれていなかった(実際に必要になってから追加する方針だったため)。
+    /// このリポジトリではユースケース層で実際に必要になったため追加している。
+    /// </summary>
+    public Result Bind(Func<T, Result> binder) =>
+        IsSuccess ? binder(Value) : Result.Failure(Error);
+
+    /// <summary>
     /// T -> Result&lt;T&gt;への暗黙変換。
     /// 「成功した値をそのまま返したいだけ」の場面で、毎回Result&lt;T&gt;.Success(value)と
     /// 書かせないための糖衣。失敗側はErrorしか作れないので暗黙変換は用意していない
