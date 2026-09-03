@@ -18,7 +18,7 @@ C#版のプロジェクト分割(BuildingBlocks / Results / Domain / Application
 
 ```
 src/
-  building-blocks/   # Entity, AggregateRoot
+  building-blocks/   # Entity, AggregateRoot, StringValueObject
   results/           # Result<T>, ResultError
   domain/
     books/           # Book, BookId, Isbn
@@ -49,3 +49,10 @@ TypeScriptらしい書き方で再実装したもの(コピーではない)。�
 - **`DateOnly` → 自作の`LocalDate`**: TypeScript/JavaScriptには日付のみを表す標準型がなく、
   ネイティブの`Date`は時刻・タイムゾーンを持つため貸出日の計算に使うと事故りやすい。
   UTC0時を内部表現に持つ値オブジェクトとして自作した。
+- **VOの基底クラス`StringValueObject`を追加**: C#の`record`は`Equals`/`GetHashCode`/`==`を
+  自動生成するため、C#版では値オブジェクト用の基底クラスを使わず`record`だけで済ませている
+  (DesignShowcaseの`ValueObject`は不採用)。TypeScriptには`record`に相当する機能がなく、
+  `equals`/`toString`をVOごとに手書きすると同じボイラープレートが繰り返されるため、
+  「stringを1つだけ持つVO」用の軽量な基底クラスとして追加した(`BookId`/`MemberId`/
+  `LoanRecordId`/`Isbn`が継承)。複数フィールドを持つVOが必要になったら、その時点で
+  DesignShowcase方式(`GetEqualityComponents()`)のような汎用的な基底クラスを検討する。

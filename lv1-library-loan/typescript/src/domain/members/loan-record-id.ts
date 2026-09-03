@@ -1,22 +1,14 @@
-export class LoanRecordId {
-  readonly value: string;
+import { StringValueObject } from "../../building-blocks/string-value-object.js";
 
+export class LoanRecordId extends StringValueObject {
   constructor(value: string) {
     if (value.trim().length === 0) {
       throw new Error("貸出記録IDは空にできません。");
     }
-    this.value = value;
+    super(value);
   }
 
   static newId(): LoanRecordId {
     return new LoanRecordId(crypto.randomUUID());
-  }
-
-  equals(other: LoanRecordId): boolean {
-    return this.value === other.value;
-  }
-
-  toString(): string {
-    return this.value;
   }
 }

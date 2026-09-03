@@ -1,18 +1,10 @@
-export class BookId {
-  readonly value: string;
+import { StringValueObject } from "../../building-blocks/string-value-object.js";
 
+export class BookId extends StringValueObject {
   constructor(value: string) {
     if (value.trim().length === 0) {
       throw new Error("本IDは空にできません。");
     }
-    this.value = value;
-  }
-
-  equals(other: BookId): boolean {
-    return this.value === other.value;
-  }
-
-  toString(): string {
-    return this.value;
+    super(value);
   }
 }
