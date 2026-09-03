@@ -40,3 +40,31 @@
   - [riko-yyy/DesignShowcase](https://github.com/riko-yyy/DesignShowcase/tree/main/src/Results)の`Result`/`Result<T>`/`Error`を取り込み、業務ルール違反はResultの失敗として返す
 - 決定: `LibraryLoan.Results`としてResult/Result&lt;T&gt;/Error/ResultExtensionsを取り込み、業務ルール違反(不変条件違反・NotFound系)をResultで表現する。値オブジェクト(MemberId/BookId/LoanRecordId/Isbn)の入力バリデーションは対象外とし、引き続き`ArgumentException`のままとする
 - 理由: 「延滞中だから借りられない」「対象が見つからない」は業務上ごく普通に起こりうる失敗であり、呼び出し側(ユースケース層)が`try-catch`ではなく`if (result.IsFailure)`という正常系のフローとして扱える方が適切と判断した。一方、値オブジェクトのコンストラクタが受け取る不正な入力(空文字・不正なISBN形式)は「そもそも不正な値を持つインスタンスを存在させない」というコンストラクタの契約の話であり、Resultで表現する対象とは性質が異なるため、今回はスコープに含めなかった
+
+## 2026-09-03: TypeScript版でResult/Result<T>をどう移植するか
+
+- 論点: C#版は値を持たない`Result`と値を持つ`Result<T>`を別クラスに分けており、その結果「値あり→値なし」のBindを別途追加する必要があった。TypeScript版でも同じ2クラス構成を踏襲するか
+- 検討した選択肢:
+  - C#版と同じくResult/Result&lt;T&gt;の2クラス構成にする
+  - `Result<T = void>`という1つのクラスに統合する
+- 決定: `Result<T = void>`に統合する
+- 理由: C#がResultとResult&lt;T&gt;を分けていたのは、C#に「値を持たない型」を汎用的に表せる型がなかったための工夫であり、本質的な設計意図ではない。TypeScriptには`void`があるため1クラスに統合でき、Bind/Mapが常に1種類の実装で「値あり→値あり」「値あり→値なし」の両方をカバーできる。C#版で追加対応が必要だった制約が、言語機能の違いによってTypeScript版ではそもそも発生しない
+
+## 2026-09-03: 貸出日・返却期限の日付型をどう表現するか
+
+- 論点: C#の`DateOnly`(時刻・タイムゾーンを持たない日付型)に相当する型がTypeScript/JavaScriptには標準で存在しない
+- 検討した選択肢:
+  - ネイティブの`Date`をUTC正規化して使う(新しい型は作らない)
+  - 日付のみを表す値オブジェクト`LocalDate`を自作する
+- 決定: `LocalDate`を自作する(内部表現はUTC0時のタイムスタンプに固定)
+- 理由: ネイティブの`Date`は時刻・タイムゾーンを持つため、「貸出日から14日後」のようなカレンダー計算に生のまま使うと、呼び出し側がUTC正規化のルールを守り忘れることで日付がずれる事故が起きやすい。呼び出し側の規律に頼るのではなく、型として「日付のみを扱う」ことを強制する方が安全と判断した
+
+## 2026-09-03: TypeScript版でVOの共通基底クラスを用意するか
+
+- 論点: C#版はVO(`MemberId`/`BookId`/`LoanRecordId`/`Isbn`)を`record`で表現し、`ValueObject`基底クラス(DesignShowcase由来)は不採用にした。しかしTypeScriptには`record`に相当する「構造的等価性を自動生成する」機能がなく、各VOで`equals`/`toString`を手書きすると同じボイラープレートが繰り返される
+- 検討した選択肢:
+  - 抽象化せず、VOごとに`equals`/`toString`を手書きし続ける
+  - DesignShowcase方式(`GetEqualityComponents()`で構成要素を列挙する汎用`ValueObject`)を移植する
+  - 「stringを1つだけ持つVO」用の軽量な`StringValueObject`基底クラスを新設する
+- 決定: `StringValueObject`を新設し、`MemberId`/`BookId`/`LoanRecordId`/`Isbn`がこれを継承する
+- 理由: 今あるVOは全て「stringを1つ持つだけ」の形であり、複数フィールドを持つVOに対応する汎用的な`GetEqualityComponents()`方式は現時点では使わない機能を先取りすることになる。一方、`equals`/`toString`の手書き反復はTypeScriptが`record`を持たないことによる素朴な重複であり、放置する理由がない。複合VOが実際に必要になった時点で、その時のVOの形に合わせて汎用的な基底クラスを検討する方針とした
